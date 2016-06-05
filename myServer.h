@@ -35,16 +35,30 @@ private:
 		int socket_create(int port);
 		int setnonblocking(int st);	
 		int socket_accept();
-		void loginMsg(int st, char *body);
 		int Send(int st, const void *body, size_t len, int flag);
 		int socket_recv(int st);
-		void sigupmsg(int st, char *msg);
+
+//login or logout 
+		void loginMsg(int st, char *body);
+		void logoutMsg(int st, char *body);
+
+//users control
 		void addUserMsg(int st, char *body);
 		void selUserMsg(int st, char *body);
 		void delUserMsg(int st, char *body);
 		void updUserMsg(int st, char *body);
 		void getUserName(int st);
 
+//privilege control
+		int updPrivilegeMsg(int st, char *body);
+		int selPrivilegeMsg(int st);
+
+		//role control
+		void addRoleMsg(int st, char *body);
+		void selRoleMsg(int st, char *body);
+		void delRoleMsg(int st, char *body);
+		void updRoleMsg(int st, char *body);
+		void getRolesName(int st);
 };
 
 #endif

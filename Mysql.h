@@ -18,24 +18,27 @@ public:
 	int add_user(char user_info[8][512]);
 	int select_user_store(char* sql,char *user_info);
 	
-	int del_user(char *name);
+	int delete_user(char *name);
 		
 	int select_users_name(char **p);
 	int select_user(char* acnt,char* user_info = NULL);
 	
-	int modify_user(char user_info[8][512]);
-	#if 0	
+	int update_user(char user_info[8][512]);
+	int update_privilege(char *str);
+	int select_privilege(char *str);
 	int add_role(char *role,char *privi);
-	int del_role(char *role);
-	int select_role(char *role,char *privi);
-	int modify_role(char *role,char *privi);
+	int delete_role(char *role);
+	int update_role(char *role,char *privi);
+	int select_role(char *role,char *privi = NULL);
+	int select_role_store(char *sql,char *role_info);
+	int select_roles_name(char **p);
 		
+	#if 0	
 	bool add_privi(char *role,char *privi);
 	bool del_privi(char *role,char *privi);
 	bool select_privi(char *role,char *privi);
 	
 	int select_user_store(char* sql,char ***user_info);
-	int select_role_store(char *sql,char **role_info);
 	#endif
 	int mysql_real_query1(char *sql);
 private:
