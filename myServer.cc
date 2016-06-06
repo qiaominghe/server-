@@ -567,7 +567,14 @@ int myServer::socket_recv(int st)
 						updRoleMsg(st, msg.body);
 						break;
 					case 4://select
-						selRoleMsg(st, msg.body);
+						if (msg.head[2] == 1)
+						{
+							getRolesName(st);
+						}
+						if (msg.head[2] == 2)
+						{
+							selRoleMsg(st, msg.body);
+						}
 						break;
 				}
 				break;
