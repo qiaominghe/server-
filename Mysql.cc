@@ -124,7 +124,7 @@ int Mysql::update_user(char user_info[8][512])
 	char sql[MAX_SQL_LEN];
 
 	bzero(sql,MAX_SQL_LEN);
-	sprintf(sql,"update usrs set name = '%s',tel = '%s',mail='%s',work = '%s',creater = '%s',create_time = '%s',privilege = '%s',passwd = '%s'where name = '%s'",user_info[0],user_info[1],user_info[2],user_info[3],user_info[4],user_info[5],user_info[6],user_info[7], user_info[0]);
+	sprintf(sql,"update usrs set name = '%s',tel = '%s',mail='%s',work = '%s',privilege = '%s',passwd = '%s'where name = '%s'",user_info[0],user_info[1],user_info[2],user_info[3],user_info[4],user_info[5], user_info[0]);
 	printf("update usrs set name = '%s',tel = '%s',mail='%s',work = '%s',creater = '%s',create_time = '%s',role = '%s',passwd = '%s'\n",user_info[0],user_info[1],user_info[2],user_info[3],user_info[4],user_info[5],user_info[6],user_info[7]);
 
 	return mysql_real_query1(sql);	
@@ -136,7 +136,25 @@ int Mysql::update_privilege(char *str)
 	bzero(sql,MAX_SQL_LEN);
 	sprintf(sql,"update privilege set id1 = '%c',id2='%c',id3 = '%c',id4 = '%c',id5 = '%c',id6 = '%c',id7 = '%c', id8 = '%c', id9 = '%c', id10 = '%c' where name = 'system'",str[0],str[1],str[2],str[3],str[4],str[5],str[6],str[7], str[8], str[9]);
 
-	return mysql_real_query1(sql); 
+	if (mysql_real_query1(sql))
+	{
+		return -1;
+	}
+
+	for (int i = 1; i <= 10; i++)
+	{
+		if (str[i-1] == '0')
+		{
+			bzero(sql,MAX_SQL_LEN);
+			sprintf(sql, "update privilege set id%d = 0", i);
+			cout << sql << endl;
+			if (mysql_real_query1(sql))
+			{
+				return -1;
+			}
+		}
+	}
+	return 0;
 }
 int Mysql::select_privilege(char *str)
 {
@@ -209,7 +227,7 @@ int Mysql::select_role(char *role,char *role_info)
 
 	return select_role_store(sql,role_info);
 }
-int Mysql::select_role_store(char *sql,char *role_info = NULL)
+int Mysql::select_role_store(char *sql,char *role_info)
 { 	
 	if ( -1 == mysql_real_query1(sql))
 	{
@@ -224,15 +242,18 @@ int Mysql::select_role_store(char *sql,char *role_info = NULL)
 		fprintf(stderr, "%s\n", "unknown error\n");  
 		return -1;  
 	}  
-	if (NULL == role_info)
+	if (row = mysql_fetch_row(result))
 	{
-		return (-1);
-	}else {
-		if (row = mysql_fetch_row(result))
+		if (NULL == role_info)
+		{
+			return (0);
+		}else {
 			sprintf(role_info,"%s%s%s%s%s%s%s%s%s%s%s:%s",row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10]);
-		else
-			return -2;
+			return 0;
+		}
 	}
+	else
+		return -2;
 	return (0);
 }	
 int Mysql::select_roles_name(char **p)
@@ -262,4 +283,29 @@ int Mysql::select_roles_name(char **p)
 	*p = buffer;
 
 	return 0;
+}
+
+int Mysql::selectUserPrivilege(const char *name, char *body)
+{
+	char sql[MAX_SQL_LEN];
+
+	bzero(sql,MAX_SQL_LEN);
+	sprintf(sql,"select privilege.id1, privilege.id2, privilege.id3, privilege.id4, privilege.id5, privilege.id6, privilege.id7, privilege.id8, privilege.id9, privilege.id10, usrs.name from usrs, privilege where usrs.name = '%s' and usrs.privilege = privilege.name", name);
+
+	cout << sql << endl;
+	int ret = mysql_real_query1(sql);
+	if (ret != 0)
+		return -1;
+	result = mysql_store_result(conn);
+	if (row = mysql_fetch_row(result))
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			strcat(body, row[i]);
+		}
+		cout << body << endl;
+		return 0;
+	}
+	else
+		return -2;
 }

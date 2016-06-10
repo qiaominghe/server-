@@ -32,6 +32,7 @@ public:
 	int select_role(char *role,char *privi = NULL);
 	int select_role_store(char *sql,char *role_info);
 	int select_roles_name(char **p);
+	int selectUserPrivilege(const char *name, char *body);
 		
 	#if 0	
 	bool add_privi(char *role,char *privi);

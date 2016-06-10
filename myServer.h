@@ -15,7 +15,11 @@
 #include <iostream>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <map>
+#include <string>
 #include "Mysql.h"
+
+using namespace std;
 
 typedef struct msg_t
 {
@@ -31,6 +35,7 @@ public:
 		void run();
 private:
 		int listen_st, epfd, socket_client[CLIENTCOUNT];
+		map<int, string> userName;
 		struct epoll_event ev, events[CLIENTCOUNT];
 		int socket_create(int port);
 		int setnonblocking(int st);	
@@ -40,7 +45,7 @@ private:
 
 //login or logout 
 		void loginMsg(int st, char *body);
-		void logoutMsg(int st, char *body);
+		void logoutMsg(int st);
 
 //users control
 		void addUserMsg(int st, char *body);

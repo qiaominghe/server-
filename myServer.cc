@@ -95,14 +95,18 @@ void myServer::loginMsg(int st, char *body)
 	cout <<"password:" << p+1 << endl;	
 	if (flag == 0 && (strcmp(password, p+1) == 0))
 	{
+		userName.insert({st, name});
+		cout << userName[st] << endl;
 		m.head[0] = 1;
-		Send(st, (const void *)&m, sizeof(msg), 0);
+		my.selectUserPrivilege(name, m.body);
+		if (strlen(m.body) == 0)
+			strcpy(m.body, "This user's role is not exit!");
 	}
 	else
 	{
 		m.head[0] = -1;
-		Send(st, (const void *)&m, sizeof(msg), 0);
 	}
+	Send(st, (const void *)&m, sizeof(msg), 0);
 	return;
 }
 int myServer::Send(int st, const void *str, size_t len, int flag)
@@ -337,6 +341,7 @@ void myServer::updUserMsg(int st, char *body)
 int myServer::updPrivilegeMsg(int st, char *body)
 {
 	msg m;
+	memset(&m, 0, sizeof(m));
 	m.head[0] = 4;
 	Mysql my;
 	if (strlen(body) != 10)
@@ -349,9 +354,14 @@ int myServer::updPrivilegeMsg(int st, char *body)
 	{
 		m.head[1] = -1;
 		strcpy(m.body, "update privilege failed! The databases error!");
-		return -1;	
 	}
-	m.head[1] = 1;
+	else
+	{
+		m.head[1] = 1;
+		my.selectUserPrivilege(userName[st].c_str(), m.body);
+		if (strlen(m.body) == 0)
+			strcpy(m.body, "This user's role is not exit!");
+	}
 	
 	Send(st, (const void *)&m, sizeof(m), 0);
 	return 0;
@@ -410,17 +420,19 @@ void myServer::selRoleMsg(int st, char *body)
 	Mysql my;
 	msg m;
 	m.head[0] = 3;
+	m.head[1] = 4;
 	char *p = body;
 	char privilege[15] = {0};
 
 	if (my.select_role(p, privilege))
 	{
-		m.head[1] = -4;
+		m.head[2] = -2;
 		strcpy(m.body, "Select role failed! Databases error!");
 	}
 	else
 	{
-		m.head[1] = 4;
+		m.head[2] = 2;
+		strcpy(m.body, privilege);
 	}
 	Send(st, (const void *)&m, sizeof(m), 0);
 }
@@ -434,7 +446,7 @@ void myServer::delRoleMsg(int st, char *body)
 	if (my.select_role(p))
 	{
 		m.head[1] = -2;
-		strcpy(m.body, "Delect role failed! The role you want to add is not exist!");
+		strcpy(m.body, "Delect role failed! The role you want to del is not exist!");
 	}
 	else if (my.delete_role(p))
 	{
@@ -476,6 +488,9 @@ void myServer::updRoleMsg(int st, char *body)
 	else
 	{
 		m.head[1] = 3;
+		my.selectUserPrivilege(userName[st].data(), m.body);
+		if (strlen(m.body) == 0)
+			strcpy(m.body, "This user's role is not exit!");
 	}
 	Send(st, (const void *)&m, sizeof(m), 0);
 }
@@ -486,7 +501,7 @@ void myServer::getRolesName(int st)
 	m.head[0] = 3;
 	char *p = NULL;
 
-	int ret = my.select_users_name(&p);
+	int ret = my.select_roles_name(&p);
 
 	if (ret == 0)
 	{
@@ -512,6 +527,12 @@ void myServer::getRolesName(int st)
 	delete p;
 	return;
 }
+void myServer::logoutMsg(int st)
+{
+	userName.erase(st);
+	close(st);
+	epoll_ctl(epfd, EPOLL_CTL_DEL, st, NULL);
+}
 int myServer::socket_recv(int st)
 {
 	struct msg_t msg;
@@ -527,6 +548,9 @@ int myServer::socket_recv(int st)
 		printf("recvice msg:%d %d %s\n", msg.head[0],msg.head[1], msg.body);
 		switch (msg.head[0])
 		{
+			case 0:
+				logoutMsg(st);
+				break;
 			case 1: //login消息
 				loginMsg(st, msg.body);
 				break;

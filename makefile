@@ -2,7 +2,7 @@
 
 CC=g++
 CFLAGS=-Wall -g 
-LFLAGS=-lmysqlclient -ldl -lpthread -lm -lrt -lstdc++ -lz
+LFLAGS=-lmysqlclient -ldl -lpthread -lm -lrt -lstdc++ -lz -std=gnu++11
 
 
 SRCS=main.cc\
